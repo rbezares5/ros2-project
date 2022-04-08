@@ -1,7 +1,8 @@
-from interfaces.srv import CameraCalibration
-
 import rclpy
 from rclpy.node import Node
+
+# import custom interfaces
+from interfaces.srv import CameraCalibration
 
 
 class cameraCalibratorNode(Node):
@@ -11,7 +12,6 @@ class cameraCalibratorNode(Node):
         self.srv = self.create_service(CameraCalibration, 'camera_calibration_service', self.cameraCalibrationCallback) #type, name and callback of the service        
 
     def cameraCalibrationCallback(self, request, response):
-        #self.get_logger().info('Incoming location request\n [x,y,z] = [%f,%f,%f]' % (request.x, request.y, request.z))
         self.get_logger().info('Calibration request acknowledged')   #receive the request
 
         if request.request:
