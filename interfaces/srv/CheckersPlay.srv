@@ -1,0 +1,5 @@
+bool request
+int8[64] board
+---
+bool goal
+int8[64] board
