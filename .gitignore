@@ -1,2 +1,6 @@
+.vscode/
+build/
+install/
+log/
 robotx/robotx/__pycache__
 data.txt

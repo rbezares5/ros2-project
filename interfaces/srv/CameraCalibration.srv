@@ -1,3 +1,4 @@
 bool request
 ---
 bool goal
+uint16[128] coordinates

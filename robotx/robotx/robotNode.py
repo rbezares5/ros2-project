@@ -2,7 +2,6 @@ import rclpy
 from rclpy.node import Node
 
 # import custom interfaces
-
 from interfaces.srv import RobotMovement
 
 
@@ -14,7 +13,6 @@ class robotServerNode(Node):
                  
 
     def robotCallback(self, request, response):
-        #self.get_logger().info('Incoming location request\n [x,y,z] = [%f,%f,%f]' % (request.x, request.y, request.z))
         self.get_logger().info('Robot movement request acknowledged')   #receive the request
         #print('Current board state:')
         #print(request.board)

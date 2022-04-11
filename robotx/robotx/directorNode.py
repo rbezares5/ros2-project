@@ -95,10 +95,16 @@ def main(args=None):
                     calibrationClient.get_logger().info(
                         'Camera calibration performed successfully'                               
                         )
+
+                    coordsList=response.coordinates
+                    print(len(coordsList))
+                    print(coordsList)
                 break
             break
     calibrationClient.destroy_node()
-    print('Calibration finished')
+    #print(len(coordsList))
+    #print(coordsList)
+    print('Calibration finished')  
     input('Press <ENTER> to continue')
 
     
