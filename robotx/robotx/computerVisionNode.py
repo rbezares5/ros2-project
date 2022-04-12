@@ -58,46 +58,34 @@ class computerVisionNode(Node):
 
         if request.request:
             # Here we process the image and finally create a matrix representing the board state
-            #boardState = list(range(64))
-                #this was a dummy boardstate, remove
 
-            # COMPUTER VISION CODE, WIP!!!
-            #this used to be a loop, but now its fine if I just do it once
+            # COMPUTER VISION CODE
+            # create camera object
             cap = cv.VideoCapture(0)
             if not cap.isOpened():
                 print("Cannot open camera")
                 exit()
 
             # Capture frame-by-frame
-            ret, frame = cap.read()
-
-            # if frame is read correctly ret is True
-            if not ret:
-                print("Can't receive frame (stream end?). Exiting ...")
-                #break #break is only for while loop, should I remove this IF?
+            _, frame = cap.read()
 
             # Our operations on the frame come here
             #crop the image using the ROI
             r=request.roi
             frame = frame[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
-            #gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
             blur = cv.GaussianBlur(frame, (15, 15), 2)
 
             #color segmentation
             maskR=createMaskR(blur)
-            cv.imshow('Red mask', maskR)
-
             maskB=createMaskB(blur)
-            cv.imshow('Blue mask', maskB)
 
             #morphological operations to get only the pieces
             kernel = cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
-            imgR=cv.morphologyEx(maskR, cv.MORPH_CLOSE, kernel)
-            contoursR, _=cv.findContours(imgR, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
-            #print(len(contoursR))
-            cv.imshow('Red pieces', imgR)
-            frameR=copy.deepcopy(frame)
 
+            #red pieces
+            imgR = cv.morphologyEx(maskR, cv.MORPH_CLOSE, kernel)
+            contoursR, _ = cv.findContours(imgR, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+            frameR = copy.deepcopy(frame)
             #find centroids using moments
             i=1
             centroidsR=[]
@@ -115,14 +103,11 @@ class computerVisionNode(Node):
                 cv.circle(frameR, (cX, cY), 5, (255, 255, 255), -1)
                 cv.putText(frameR, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 i+=1
-            cv.imshow('Red centroids', frameR)
 
             #repeat the same operations for blue pieces
-            imgB=cv.morphologyEx(maskB, cv.MORPH_CLOSE, kernel)
-            contoursB, _=cv.findContours(imgB, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
-            #print(len(contoursB))
-            cv.imshow('Blue pieces', imgB)
-            frameB=copy.deepcopy(frame)
+            imgB = cv.morphologyEx(maskB, cv.MORPH_CLOSE, kernel)
+            contoursB, _ = cv.findContours(imgB, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+            frameB = copy.deepcopy(frame)
             #find centroids using moments
             i=1
             centroidsB=[]
@@ -140,15 +125,13 @@ class computerVisionNode(Node):
                 cv.circle(frameB, (cX, cY), 5, (255, 255, 255), -1)
                 cv.putText(frameB, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
                 i+=1
-            cv.imshow('Blue centroids', frameB)
-
 
             #Now we compare the coordinates of each piece with the coordinates of each square
-            boardState=np.zeros((8,8), dtype=int)
-            centroidsSquares=request.boardcoords #THIS ONE IS JUST A LIST, I GOTTA CONVERT IT INTO A PROPER NP.ARRAY FIRST!!!
-            centroidsSquares=np.reshape(centroidsSquares, (64,2))
+            boardState = np.zeros((8,8), dtype=int)
+            centroidsSquares = request.boardcoords
+            centroidsSquares = np.reshape(centroidsSquares, (64,2))
 
-            centroidsR=np.asarray(centroidsR)
+            centroidsR = np.asarray(centroidsR)
             if len(centroidsR)>0:
                 for i in range(len(centroidsR)):
                     pos=0
@@ -163,7 +146,7 @@ class computerVisionNode(Node):
                             pos=j
                     boardState[np.unravel_index(pos,(8,8))]=1 #linear index
 
-            centroidsB=np.asarray(centroidsB)
+            centroidsB = np.asarray(centroidsB)
             if len(centroidsB)>0:
                 for i in range(len(centroidsB)):
                     pos=0
@@ -178,13 +161,8 @@ class computerVisionNode(Node):
                             pos=j
                     boardState[np.unravel_index(pos,(8,8))]=2 #linear index
 
-            #print(boardState)
-            #input('press enter to continue')
-
-            # Finish the program
-            #if cv.waitKey(1) == ord('q'):
-            #    break
-            boardState=boardState.flatten() #HAVE TO CHECK BUT I THINK THIS ONE IS AN ARRAY, HAVE TO CONVERT IT INTO A LIST BEEFORE SENDING RESPONSE!!!
+            # convert the array into a list so that it can be passed
+            boardState=boardState.flatten() 
             boardState=boardState.tolist()
 
             response.board=boardState

@@ -39,17 +39,12 @@ class cameraCalibratorNode(Node):
                 frame = frame[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
                 gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
-                #Detect chessboard squares using canny!
-                #cv.imshow('grayscale', gray)
+                #Detect chessboard squares using canny
                 grayBlur = cv.GaussianBlur(gray, (15, 15), 2)
-                #cv.imshow('gray blur', grayBlur)
-                edges=cv.Canny(grayBlur,40,120)
-                #cv.imshow('edges', edges)
+                edges = cv.Canny(grayBlur,40,120)
                 kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
-                edges=cv.dilate(edges, kernel)
-                #cv.imshow('dilated edges', edges)
-                edges=cv.bitwise_not(edges)
-                #cv.imshow('inverted edges', edges)
+                edges = cv.dilate(edges, kernel)
+                edges = cv.bitwise_not(edges)
 
                 # find contours
                 contours, _ = cv.findContours(edges, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
@@ -60,7 +55,6 @@ class cameraCalibratorNode(Node):
                     area = cv.contourArea(con)
                     if (area < 1000) & (area > 200): # size threshold
                         squares.append(con)
-                #cv.imshow('filtered squares', edges)
 
                 #find centroids using moments
                 i=1
@@ -78,22 +72,20 @@ class cameraCalibratorNode(Node):
                     centroidsSquares.append([cX,cY])
                     i+=1
 
-                # WE HAVE TO ORDER THE CENTROIDS OF THE SQUARES
+                # We have to order the centroids of the squares
                 if len(centroidsSquares) > 0:
                     centroidsSquares=np.asarray(centroidsSquares)
-                    #print(centroidsSquares)
-                    _, bins =np.histogram(centroidsSquares[:,1], bins='auto')
+                    # bin the "y" coordinate of the centroids
+                    _, bins = np.histogram(centroidsSquares[:,1], bins='auto')
                     bins=bins-5 #we shift the bins edges to account for approximation error
-                    #print(bins)
                     centroidsSquaresOrder=np.digitize(centroidsSquares[:,1],bins,right=False)
-                    #print(centroidsSquaresOrder)
                     centroidsSquares2=copy.deepcopy(centroidsSquares)
+                    # assign the bin order value over the actual coordinate
                     centroidsSquares2[:,1]=centroidsSquaresOrder
-                    #print(centroidsSquares2)
+                    # reorder the points based on the y bins and then on the x coordinate
                     index=np.lexsort((centroidsSquares2[:,0],centroidsSquares2[:,1]))
                     centroidsSquares3=[(centroidsSquares[i,0],centroidsSquares[i,1]) for i in index]
                     centroidsSquares3=np.asarray(centroidsSquares3)
-                    #print(centroidsSquares3)
                
                     i=1
                     for j in range(len(centroidsSquares3)):
@@ -103,11 +95,9 @@ class cameraCalibratorNode(Node):
                         i+=1
                     cv.imshow('Squares centroids', frame)
 
+                # convert the array into a list so that it can be passed
                 coordsList=centroidsSquares3.flatten()
                 coordsList=coordsList.tolist()
-
-                #print(len(coordsList))
-                #print(coordsList)
 
                 #if len(coordsList)==128:
                 #    response.coordinates=coordsList
