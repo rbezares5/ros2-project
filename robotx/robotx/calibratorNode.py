@@ -29,6 +29,10 @@ class cameraCalibratorNode(Node):
             _, frame = cap.read()
             r=cv.selectROI(frame)
 
+            #convert the roi, which is a tuple, into a list so that it can be passed in the response
+            roi=list(r)
+            response.roi=roi
+
             print('Detecting empty board. Press q to continue')
             while True:
                 _, frame = cap.read()

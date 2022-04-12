@@ -1,4 +1,6 @@
 bool request
+uint16[128] boardcoords
+uint16[4] roi
 ---
 bool goal
 int8[64] board

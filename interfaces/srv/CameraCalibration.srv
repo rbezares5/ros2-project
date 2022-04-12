@@ -2,3 +2,4 @@ bool request
 ---
 bool goal
 uint16[128] coordinates
+uint16[4] roi

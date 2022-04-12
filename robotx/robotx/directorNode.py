@@ -32,8 +32,10 @@ class VisionClientAsync(Node):
             self.get_logger().info('service not available, waiting again...')
         self.req = ComputerVision.Request()                                   
 
-    def send_request(self):
-        self.req.request = True                
+    def send_request(self,pCoords,pROI):
+        self.req.request = True
+        self.req.boardcoords = pCoords
+        self.req.roi = pROI                
         self.future = self.cli.call_async(self.req)
 
 class AgentClientAsync(Node):
@@ -97,13 +99,12 @@ def main(args=None):
                         )
 
                     coordsList=response.coordinates
-                    print(len(coordsList))
-                    print(coordsList)
+                    #print(len(coordsList))
+                    #print(coordsList)
+                    roi=response.roi
                 break
             break
     calibrationClient.destroy_node()
-    #print(len(coordsList))
-    #print(coordsList)
     print('Calibration finished')  
     input('Press <ENTER> to continue')
 
@@ -114,7 +115,7 @@ def main(args=None):
         print('Requesting board vision')
         input('Press <ENTER> to continue')
         computerVisionClient = VisionClientAsync()
-        computerVisionClient.send_request()
+        computerVisionClient.send_request(coordsList,roi)
         
         # this loop checks if there is an available service with a matching name and type as the client
         while rclpy.ok():
@@ -205,7 +206,7 @@ def main(args=None):
 
         # create a client node object for the computer vision service
         computerVisionClient = VisionClientAsync()
-        computerVisionClient.send_request()
+        computerVisionClient.send_request(coordsList,roi)
         
         # this loop checks if there is an available service with a matching name and type as the client
         while rclpy.ok():
