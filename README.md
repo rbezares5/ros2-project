@@ -12,3 +12,7 @@ ros2 run robotx agent
 ros2 run robotx robot
 
 As of now, only the structure of communication between nodes is implemented.
+
+Functionality of different nodes currently being added
+
+Credits for the checkers game code which I adapted for this project to: https://github.com/VarunRaval48/checkers-AI

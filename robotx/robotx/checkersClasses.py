@@ -1,90 +1,9 @@
-import rclpy
-from rclpy.node import Node
-
-import numpy as np
-
 import math
 import copy
 from functools import reduce
 import copy
 from abc import ABC, abstractmethod
 
-# import custom interfaces
-from interfaces.srv import CheckersPlay
-
-
-class checkersAgentNode(Node):
-
-    def __init__(self):
-        super().__init__('checkers_agent_server') #initilize the node with this name
-        self.srv = self.create_service(CheckersPlay, 'checkers_play_service', self.checkersPlayCallback) #type, name and callback of the service
-                
-    def checkersPlayCallback(self, request, response):
-        self.get_logger().info('Checkers play request acknowledged')   #receive the request
-        #print('Current board state:')
-        #print(request.board)
-
-        if request.request:
-            # Here we get a list representing the board state and select a play and return the modified matrix
-            boardRequest = request.board
-            print("Board state as list from the request data")
-            print(boardRequest)
-
-            # Convert that list into a format that can be used by the checkers program
-            boardList=np.zeros((8,4), dtype=int)
-            k=0
-            for i in range(8):
-                for j in range(8):
-                    if (i+j+1)%2==1:
-                        boardList[np.unravel_index(k,(8,4))]=boardRequest[np.ravel_multi_index((i,j),(8,8))]
-                        k+=1
-
-            boardList=boardList.tolist()
-            print("Board state as a list using the same format as the game program")
-            print(boardList)
-
-            # Initialize a gamestate object and asign the values of the list we got
-            myBoard=GameState()
-
-            myBoard.board.spots=boardList
-            #print(myBoard.board.spots)
-            print('Received board:')
-            myBoard.print_board()
-
-            # Initialize an AI agent object and generate a move
-            aiPlayer = AlphaBetaAgent(depth=3)
-            move=aiPlayer.get_action(myBoard)
-            print(move)
-
-            # Apply the move to the board
-            myBoard.board.make_move(move, switch_player_turn=False)
-            print('Play selected. Next board state:')
-            myBoard.print_board()
-            
-            # Send info about the play so that the robot can physically move the pieces
-            #TODO
-            #response.board=boardState
-            response.goal = True
-
-        else:
-            response.goal = False
-        
-        return response
-
-
-def main(args=None):
-    rclpy.init(args=args)
-
-    checkersAgentServer = checkersAgentNode()
-    rclpy.spin(checkersAgentServer)
-
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
-
-#DEFINITIONS OF CLASSES FOR THE CHECKERS GAME
 class Board:
     """
     A class to represent and play an 8x8 game of checkers.
@@ -473,54 +392,6 @@ class GameState:
         """
         return self.board.is_game_over() or self.max_moves_done
 
-    def is_first_agent_win(self):
-        """
-        Returns: False if game is still on or first agent has lost and True iff first agent has won
-        """
-
-        # If max moves has reached, none of the agents has won
-        if self.max_moves_done:
-            return False
-
-        if not self.is_game_over() or self.is_first_agent_turn():
-            return False
-
-        return True
-    
-    def is_second_agent_win(self):
-        """
-        Returns: False if game is still on or second agent has lost and True iff second agent has won
-        """
-
-        # If max moves has reached, none of the agents has won
-        if self.max_moves_done:
-            return False
-
-        if not self.is_game_over() or not self.is_first_agent_turn():
-            return False
-
-        return True
-
-    def player_info(self):
-        """
-        Returns: the index of player (P1 or P2) whose turn is next
-        """
-
-        # if player_turn is true, it indicates turn of player P1
-        return self.board.P1 if self.board.player_turn else self.board.P2
-
-
-    def player_symbol(self, index):
-        """
-        index: index of the player to be queried 1 or 2
-
-        Returns: symbol corresponding to the player in the game
-        """
-        if index == 1:
-            return self.board.P1_SYMBOL
-        else:
-            return self.board.P2_SYMBOL
-
     def get_pieces_and_kings(self, player=None):
         """
         player: True if for the first player, false for the second player, None for both players
@@ -543,30 +414,6 @@ class GameState:
                 return [count[1], count[3]]  #Player 2
         else:
             return count
-
-    def set_max_moves_done(self, done=True):
-        self.max_moves_done = done
-
-    def num_attacks(self):
-        """
-        Returns: total number of pieces to which this player is attacking
-        """
-        piece_locations = self.board.get_piece_locations()
-
-        capture_moves = reduce(lambda x, y: x + y, list(map(self.board.get_capture_moves, piece_locations)), [])
-        num_pieces_in_attack = 0
-
-        pieces_in_attack = set()
-        for move in capture_moves:
-            for i, loc in enumerate(move):
-                if (i+1) < len(move):
-                    loc_2 = move[i+1]
-                    pieces_in_attack.add(( (loc_2[0] + loc[0]) / 2, (loc_2[1] + loc[1]) / 2 + loc[0] % 2,))
-
-        num_pieces_in_attack = len(pieces_in_attack)
-        return num_pieces_in_attack
-
-        
 
 class Agent(ABC):
 

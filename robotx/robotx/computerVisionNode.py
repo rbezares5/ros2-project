@@ -1,4 +1,3 @@
-from tkinter import CENTER
 import rclpy
 from rclpy.node import Node
 

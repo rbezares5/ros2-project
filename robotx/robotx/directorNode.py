@@ -163,7 +163,7 @@ def main(args=None):
                             'Checkers play made'                               
                             )
 
-                        boardState=response.board
+                        #boardState=response.board
                         print(boardState)
                     break
                 break
@@ -201,6 +201,12 @@ def main(args=None):
         print('Robot movement(s) performed')
         input('Press <ENTER> to continue')
 
+        #Assuming player 2 is human, now is the time to make a move on the board and then let the program continue
+        print('Calling player 2 (human)')
+        print('Please make your move on the board')
+        input("Press <ENTER> to continue once you're done")
+
+        '''
         print('Requesting board vision')
         input('Press <ENTER> to continue')
 
@@ -231,7 +237,7 @@ def main(args=None):
         computerVisionClient.destroy_node()
         print('Board state acquired')
         input('Press <ENTER> to continue')
-
+        
 
         # create a client node object for the checkers play service
         print('Requesting player 2 service')
@@ -289,6 +295,7 @@ def main(args=None):
         robotClient.destroy_node()
         print('Robot movement(s) performed')
         input('Press <ENTER> to continue')
+        '''
 
 
     print("That's all folks!")
