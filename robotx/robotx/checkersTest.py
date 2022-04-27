@@ -15,6 +15,17 @@ for i in range(5,8):
         if (i+j+1)%2==1:
             boardNumpy[i,j]=2
 
+boardNumpy=np.array([
+    (0,0,0,0,0,0,0,0),
+    (0,0,0,0,0,0,0,0),
+    (1,0,0,0,0,0,0,0),
+    (0,2,0,0,0,0,0,0),
+    (0,0,0,0,0,0,0,0),
+    (0,0,0,2,0,0,0,0),
+    (0,0,1,0,0,0,2,0),
+    (0,0,0,0,0,0,0,0)
+])
+
 print("Board state as numpy array")
 print(boardNumpy)
 
@@ -68,9 +79,10 @@ myBoard.print_board()
 
 aiPlayer = AlphaBetaAgent(depth=3)
 move=aiPlayer.get_action(myBoard)
+print('jugada generada')
 print(move)
 
-myBoard.board.make_move(move, switch_player_turn=False)
+myBoard.board.make_move2(move, switch_player_turn=False)
 #myBoard.make_move(move, switch_player_turn=False)
 #print(myBoard.spots)
 myBoard.print_board()

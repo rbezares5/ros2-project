@@ -267,6 +267,52 @@ class Board:
         if switch_player_turn:
             self.player_turn = not self.player_turn
 
+    def make_move2(self, move, switch_player_turn=True):
+        """
+        Makes a given move on the board, and (as long as is wanted) switches the indicator for
+        which players turn it is.
+        """
+        if abs(move[0][0] - move[1][0]) == 2:
+            #rutina de vaciar tablero si se come ficha
+            for j in range(len(move) - 1):
+                #determinar en qué columna (0-3) se come ficha
+                if move[j][0] % 2 == 1:
+                    if move[j + 1][1] < move[j][1]:
+                        middle_y = move[j][1]
+                    else:
+                        middle_y = move[j + 1][1]
+                else:
+                    if move[j + 1][1] < move[j][1]:
+                        middle_y = move[j + 1][1]
+                    else:
+                        middle_y = move[j][1]
+
+                #determinar en qué fila (0-7) se come ficha    
+                if move[j][0]-move[j+1][0]<0:
+                    middle_x=move[j][0]+1
+                else:
+                    middle_x=move[j][0]-1
+                
+                self.spots[int((move[j][0] + move[j + 1][0]) / 2)][middle_y] = self.EMPTY_SPOT
+                if type(middle_y) != None:  #este if se puede obviar
+                    print('ficha comida en', middle_x, ' ',middle_y)
+
+        #rutina de movimiento de ficha
+        self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] = self.spots[move[0][0]][move[0][1]]
+        #rutinas de promocion de fichas
+        if move[len(move) - 1][0] == self.HEIGHT - 1 and self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] == self.P1:
+            self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] = self.P1_K
+            print('promociona ficha P1 en',move[1][0],move[1][1])
+        elif move[len(move) - 1][0] == 0 and self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] == self.P2:
+            self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] = self.P2_K
+        else:
+            self.spots[move[len(move) - 1][0]][move[len(move) - 1][1]] = self.spots[move[0][0]][move[0][1]]
+        #rutina de vaciado de tablero de la ficha movida
+        self.spots[move[0][0]][move[0][1]] = self.EMPTY_SPOT
+
+        if switch_player_turn:
+            self.player_turn = not self.player_turn
+
     def get_potential_spots_from_moves(self, moves):
         """
         Get's the potential spots for the board if it makes any of the given moves.
