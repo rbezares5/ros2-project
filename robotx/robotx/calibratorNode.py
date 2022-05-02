@@ -96,14 +96,35 @@ class cameraCalibratorNode(Node):
                     cv.imshow('Squares centroids', frame)
 
                 # convert the array into a list so that it can be passed
-                coordsList=centroidsSquares3.flatten()
-                coordsList=coordsList.tolist()
+                #coordsList=centroidsSquares3.flatten()
+                #coordsList=coordsList.tolist()
 
-                #if len(coordsList)==128:
-                #    response.coordinates=coordsList
-                #    response.goal = True
-                #else:
-                #    response.goal = False
+
+                if len(centroidsSquares3)==64:
+                    print('Full board detected. Reducing to playable squares only')
+                    # turn CentroidsSquares3 into a reduced array of 32 coordinates, discarding non-playable squares
+                    centroidsSquares4=np.zeros((32,2), dtype=int)
+                    k=0
+                    for i in range(8):
+                        for j in range(8):
+                            if (i+j+1)%2==1:
+                                centroidsSquares4[k]=centroidsSquares3[np.ravel_multi_index((i,j),(8,8))]
+                                k+=1
+
+                    # print the reduced coordinates onscreen
+                    i=1
+                    for j in range(len(centroidsSquares4)):
+                        cX=centroidsSquares4[j,0]
+                        cY=centroidsSquares4[j,1]
+                        cv.putText(frame, str(i), (cX, cY),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                        i+=1
+                    cv.imshow('Squares centroids', frame)
+
+                    # convert the array into a list so that it can be passed
+                    coordsList=centroidsSquares4.flatten()
+                    coordsList=coordsList.tolist()
+
+                    break
 
                 if cv.waitKey(1) == ord('q'):
                     break

@@ -1,4 +1,6 @@
 bool request
-int8[64] board
+int8[4] move
+int8[2] promote
+int8[4] capture
 ---
 bool goal

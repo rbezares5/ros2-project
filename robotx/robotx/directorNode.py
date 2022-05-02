@@ -55,17 +55,20 @@ class AgentClientAsync(Node):
 
 class RobotClientAsync(Node):
 
-    def __init__(self,board):
+    def __init__(self):
         super().__init__('robot_client')    #initilize the node with this name
         self.cli = self.create_client(RobotMovement, 'robot_movement_service')     #type and name of the service  
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('service not available, waiting again...')
         self.req = RobotMovement.Request()
-        self.board = board                             
+        #self.board = board                             
 
-    def send_request(self):
+    def send_request(self,pMove,pProm,pCap):
         self.req.request = True
-        self.req.board = self.board             
+        #self.req.board = self.board
+        self.req.move = pMove
+        self.req.promote = pProm
+        self.req.capture = pCap            
         self.future = self.cli.call_async(self.req)
 
 
@@ -133,7 +136,7 @@ def main(args=None):
                             )
 
                         boardState=response.board
-                        print(boardState)
+                        #print(boardState)
                     break
                 break
         computerVisionClient.destroy_node()
@@ -164,7 +167,10 @@ def main(args=None):
                             )
 
                         #boardState=response.board
-                        print(boardState)
+                        move=response.move
+                        promote=response.promote
+                        capture=response.capture
+                        #print(boardState)
                     break
                 break
 
@@ -176,8 +182,8 @@ def main(args=None):
         # create a client node object for the robot movement service
         print('Requesting robot movement service')
         input('Press <ENTER> to continue')
-        robotClient = RobotClientAsync(boardState)
-        robotClient.send_request()
+        robotClient = RobotClientAsync()
+        robotClient.send_request(move,promote,capture)
         
         # this loop checks if there is an available service with a matching name and type as the client
         while rclpy.ok():

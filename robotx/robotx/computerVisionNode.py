@@ -126,9 +126,9 @@ class computerVisionNode(Node):
                 i+=1
 
             #Now we compare the coordinates of each piece with the coordinates of each square
-            boardState = np.zeros((8,8), dtype=int)
+            boardState = np.zeros((8,4), dtype=int)
             centroidsSquares = request.boardcoords
-            centroidsSquares = np.reshape(centroidsSquares, (64,2))
+            centroidsSquares = np.reshape(centroidsSquares, (32,2))
 
             centroidsR = np.asarray(centroidsR)
             if len(centroidsR)>0:
@@ -143,7 +143,7 @@ class computerVisionNode(Node):
                         if dist < minDist:
                             minDist=dist
                             pos=j
-                    boardState[np.unravel_index(pos,(8,8))]=1 #linear index
+                    boardState[np.unravel_index(pos,(8,4))]=1 #linear index
 
             centroidsB = np.asarray(centroidsB)
             if len(centroidsB)>0:
@@ -158,7 +158,7 @@ class computerVisionNode(Node):
                         if dist < minDist:
                             minDist=dist
                             pos=j
-                    boardState[np.unravel_index(pos,(8,8))]=2 #linear index
+                    boardState[np.unravel_index(pos,(8,4))]=2 #linear index
 
             # convert the array into a list so that it can be passed
             boardState=boardState.flatten() 
