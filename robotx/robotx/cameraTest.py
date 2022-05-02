@@ -64,7 +64,7 @@ while True:
     #bwframe
     grayBlur = cv.GaussianBlur(gray, (15, 15), 2)
     cv.imshow('gray blur', grayBlur)
-    edges=cv.Canny(grayBlur,40,120)
+    edges=cv.Canny(grayBlur,10,100)
     cv.imshow('edges', edges)
     kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
     edges=cv.dilate(edges, kernel)
@@ -129,8 +129,31 @@ while True:
             i+=1
         cv.imshow('Squares centroids', frame)
 
+    if len(centroidsSquares3) == 64:
+        print('SQUARES DETECTED SUCCESFULLY')
+
+        #turn CentroidsSquares3 into a reduced list of 32, discarding non-playable squares
+        centroidsSquares4=np.zeros((32,2), dtype=int)
+        k=0
+        for i in range(8):
+            for j in range(8):
+                if (i+j+1)%2==1:
+                    print(k)
+                    centroidsSquares4[k]=centroidsSquares3[np.ravel_multi_index((i,j),(8,8))]
+                    k+=1
+
+        i=1
+        for j in range(len(centroidsSquares4)):
+            cX=centroidsSquares4[j,0]
+            cY=centroidsSquares4[j,1]
+            cv.putText(frame, str(i), (cX, cY),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            i+=1
+        cv.imshow('Squares centroids', frame)
+
+        break   #finish this section
+
     if cv.waitKey(1) == ord('q'):
-        break
+        break   
 
 #MAIN LOOP
 while True:
@@ -226,35 +249,35 @@ while True:
     
 
     #Now we compare the coordinates of each piece with the coordinates of each square
-    boardState=np.zeros((8,8), dtype=int)
+    boardState=np.zeros((8,4), dtype=int)
 
     if len(centroidsR)>0:
         for i in range(len(centroidsR)):
             pos=0
             minDist=1000
-            for j in range(len(centroidsSquares)):
-                p1=np.array([centroidsSquares3[j,0], centroidsSquares3[j,1]]) 
+            for j in range(len(centroidsSquares4)):
+                p1=np.array([centroidsSquares4[j,0], centroidsSquares4[j,1]]) 
                 p2=np.array([centroidsR[i][0], centroidsR[i][1]])
                 dist=p1-p2
                 dist=(dist[0]**2 + dist[1]**2)**(0.5) 
                 if dist < minDist:
                     minDist=dist
                     pos=j
-            boardState[np.unravel_index(pos,(8,8))]=1 #linear index
+            boardState[np.unravel_index(pos,(8,4))]=1 #linear index
 
     if len(centroidsB)>0:
         for i in range(len(centroidsB)):
             pos=0
             minDist=1000
-            for j in range(len(centroidsSquares)):
-                p1=np.array([centroidsSquares3[j,0], centroidsSquares3[j,1]]) 
+            for j in range(len(centroidsSquares4)):
+                p1=np.array([centroidsSquares4[j,0], centroidsSquares4[j,1]]) 
                 p2=np.array([centroidsB[i][0], centroidsB[i][1]])
                 dist=p1-p2
                 dist=(dist[0]**2 + dist[1]**2)**(0.5) 
                 if dist < minDist:
                     minDist=dist
                     pos=j
-            boardState[np.unravel_index(pos,(8,8))]=2 #linear index
+            boardState[np.unravel_index(pos,(8,4))]=2 #linear index
 
     #print(boardState)
     #input('press enter to continue')

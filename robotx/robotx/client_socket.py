@@ -6,7 +6,7 @@ from checkersClasses import *
 boardNumpy=np.array([
     (0,0,0,0,0,0,0,0),
     (0,0,0,0,0,0,0,0),
-    (1,0,0,0,1,0,1,0),
+    (0,0,0,0,0,0,0,0),
     (0,2,0,1,0,0,0,0),
     (0,0,0,0,2,0,0,0),
     (0,0,0,2,0,0,0,0),
@@ -45,9 +45,9 @@ print(move)
 
 cap, prom, _ = myBoard.board.make_move2(move, switch_player_turn=False)
 if prom==[]:
-    prom=[[0,0]]#think of a better 'error' position
+    prom=[[9,9]]#think of a better 'error' position
 if cap==[]:
-    cap=[[0,0]]#think of a better 'error' position
+    cap=[[9,9],[9,9]]#think of a better 'error' position
 myBoard.print_board()
 
 # Create a TCP/IP socket
@@ -59,11 +59,12 @@ sockCapture = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Connect the socket to the port where the server is listening
 address='localhost'
+#address=''
 server_address1 = (address, 1010)
 server_address2 = (address, 1020)
 server_address3 = (address, 1030)
 server_address4 = (address, 1040)
-print('connecting to {} port {}'.format(*server_address1))
+print('connecting to IP {} port {}'.format(*server_address1))
 sockMoveOrigin.connect(server_address1)
 sockMoveDestination.connect(server_address2)
 sockPromote1.connect(server_address3)
@@ -89,7 +90,7 @@ sockMoveDestination.sendall(destination)
 sockPromote1.sendall(promote1)
 sockCapture.sendall(capture)
 
-print('closing socket')
+print('closing sockets')
 sockMoveOrigin.close()
 sockMoveDestination.close()
 sockPromote1.close()
