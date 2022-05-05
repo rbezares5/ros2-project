@@ -41,7 +41,7 @@ class cameraCalibratorNode(Node):
 
                 #Detect chessboard squares using canny
                 grayBlur = cv.GaussianBlur(gray, (15, 15), 2)
-                edges = cv.Canny(grayBlur,40,120)
+                edges = cv.Canny(grayBlur,10,100)
                 kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
                 edges = cv.dilate(edges, kernel)
                 edges = cv.bitwise_not(edges)
@@ -77,7 +77,7 @@ class cameraCalibratorNode(Node):
                     centroidsSquares=np.asarray(centroidsSquares)
                     # bin the "y" coordinate of the centroids
                     _, bins = np.histogram(centroidsSquares[:,1], bins='auto')
-                    bins=bins-5 #we shift the bins edges to account for approximation error
+                    bins=bins+10 #we shift the bins edges to account for approximation error
                     centroidsSquaresOrder=np.digitize(centroidsSquares[:,1],bins,right=False)
                     centroidsSquares2=copy.deepcopy(centroidsSquares)
                     # assign the bin order value over the actual coordinate
@@ -119,6 +119,9 @@ class cameraCalibratorNode(Node):
                         cv.putText(frame, str(i), (cX, cY),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
                         i+=1
                     cv.imshow('Squares centroids', frame)
+
+                    #print(centroidsSquares3)
+                    #print(centroidsSquares4)
 
                     # convert the array into a list so that it can be passed
                     coordsList=centroidsSquares4.flatten()

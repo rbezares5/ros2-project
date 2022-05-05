@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import copy
-
+'''
 def createMaskR(frame):
     # HSV filter
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -19,7 +19,25 @@ def createMaskR(frame):
     mask=cv.inRange(hsv, lower, upper)
     
     return mask
+'''
+def createMaskR(frame):
+    # HSV filter
+    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
+    #hsv thresholds
+    hMin=0.062
+    hMax=0.147
+    sMin=0.365
+    sMax=1
+    vMin=0.837
+    vMax=1
+    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
+    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
+
+    mask=cv.inRange(hsv, lower, upper)
+    
+    return mask
+'''    
 def createMaskB(frame):
     # HSV filter
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -36,7 +54,61 @@ def createMaskB(frame):
 
     mask=cv.inRange(hsv, lower, upper)
     
-    return mask    
+    return mask
+'''
+def createMaskB(frame):
+    # HSV filter
+    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    #hsv thresholds
+    hMin=0.544
+    hMax=0.714
+    sMin=0.318
+    sMax=1
+    vMin=0.356
+    vMax=0.781
+    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
+    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
+
+    mask=cv.inRange(hsv, lower, upper)
+    
+    return mask
+
+def createMaskP(frame):
+    # HSV filter
+    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    #hsv thresholds
+    hMin=0.819
+    hMax=1
+    sMin=0.365
+    sMax=1
+    vMin=0.631
+    vMax=1
+    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
+    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
+
+    mask=cv.inRange(hsv, lower, upper)
+    
+    return mask
+
+def createMaskG(frame):
+    # HSV filter
+    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    #hsv thresholds
+    hMin=0.153
+    hMax=0.404
+    sMin=0.159
+    sMax=1
+    vMin=0.614
+    vMax=1
+    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
+    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
+
+    mask=cv.inRange(hsv, lower, upper)
+    
+    return mask        
 
 
 
@@ -108,7 +180,7 @@ while True:
         centroidsSquares=np.asarray(centroidsSquares)
         #print(centroidsSquares)
         _, bins =np.histogram(centroidsSquares[:,1], bins='auto')
-        bins=bins-5 #we shift the bins edges to account for approximation error
+        bins=bins+10 #we shift the bins edges to account for approximation error
         #print(bins)
         centroidsSquaresOrder=np.digitize(centroidsSquares[:,1],bins,right=False)
         #print(centroidsSquaresOrder)
@@ -138,7 +210,7 @@ while True:
         for i in range(8):
             for j in range(8):
                 if (i+j+1)%2==1:
-                    print(k)
+                    #print(k)
                     centroidsSquares4[k]=centroidsSquares3[np.ravel_multi_index((i,j),(8,8))]
                     k+=1
 
@@ -149,6 +221,9 @@ while True:
             cv.putText(frame, str(i), (cX, cY),cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             i+=1
         cv.imshow('Squares centroids', frame)
+
+        #print(centroidsSquares3)
+        #print(centroidsSquares4)
 
         break   #finish this section
 
@@ -170,12 +245,18 @@ while True:
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
     blur = cv.GaussianBlur(frame, (15, 15), 2)
+    cv.imshow('color blur',blur)
     #color segmentation
     maskR=createMaskR(blur)
     cv.imshow('Red mask', maskR)
 
     maskB=createMaskB(blur)
     cv.imshow('Blue mask', maskB)
+
+    maskP=createMaskP(blur)
+    cv.imshow('Pink mask', maskP)
+    maskG=createMaskG(blur)
+    cv.imshow('Green mask', maskG)
 
     #morphological operations to get only the pieces
     kernel = cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
@@ -229,6 +310,52 @@ while True:
         i+=1
     cv.imshow('Blue centroids', frameB)
 
+    imgP=cv.morphologyEx(maskP, cv.MORPH_CLOSE, kernel)
+    contoursP, _ =cv.findContours(imgP, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+    cv.imshow('Pink pieces', imgP)
+    frameP=copy.deepcopy(frame)
+    #find centroids using moments
+    i=1
+    centroidsP=[]
+    for c in contoursP:
+        # calculate moments for each contour
+        M = cv.moments(c)
+
+        # calculate x,y coordinate of center
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        else:
+            cX, cY = 0, 0
+        centroidsP.append([cX,cY])
+        cv.circle(frameP, (cX, cY), 5, (255, 255, 255), -1)
+        cv.putText(frameP, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        i+=1
+    cv.imshow('Pink centroids', frameP)
+
+    imgG=cv.morphologyEx(maskG, cv.MORPH_CLOSE, kernel)
+    contoursG, _ =cv.findContours(imgG, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+    cv.imshow('Green pieces', imgG)
+    frameG=copy.deepcopy(frame)
+    #find centroids using moments
+    i=1
+    centroidsG=[]
+    for c in contoursG:
+        # calculate moments for each contour
+        M = cv.moments(c)
+
+        # calculate x,y coordinate of center
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        else:
+            cX, cY = 0, 0
+        centroidsG.append([cX,cY])
+        cv.circle(frameG, (cX, cY), 5, (255, 255, 255), -1)
+        cv.putText(frameG, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        i+=1
+    cv.imshow('Green centroids', frameG)
+
 
     
     '''
@@ -279,8 +406,36 @@ while True:
                     pos=j
             boardState[np.unravel_index(pos,(8,4))]=2 #linear index
 
-    #print(boardState)
-    #input('press enter to continue')
+    if len(centroidsP)>0:
+        for i in range(len(centroidsP)):
+            pos=0
+            minDist=1000
+            for j in range(len(centroidsSquares4)):
+                p1=np.array([centroidsSquares4[j,0], centroidsSquares4[j,1]]) 
+                p2=np.array([centroidsP[i][0], centroidsP[i][1]])
+                dist=p1-p2
+                dist=(dist[0]**2 + dist[1]**2)**(0.5) 
+                if dist < minDist:
+                    minDist=dist
+                    pos=j
+            boardState[np.unravel_index(pos,(8,4))]=3 #linear index
+
+    if len(centroidsG)>0:
+        for i in range(len(centroidsG)):
+            pos=0
+            minDist=1000
+            for j in range(len(centroidsSquares4)):
+                p1=np.array([centroidsSquares4[j,0], centroidsSquares4[j,1]]) 
+                p2=np.array([centroidsG[i][0], centroidsG[i][1]])
+                dist=p1-p2
+                dist=(dist[0]**2 + dist[1]**2)**(0.5) 
+                if dist < minDist:
+                    minDist=dist
+                    pos=j
+            boardState[np.unravel_index(pos,(8,4))]=4 #linear index
+
+    print(boardState)
+    input('press enter to continue')
 
     # Finish the program
     if cv.waitKey(1) == ord('q'):
