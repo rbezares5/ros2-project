@@ -1,0 +1,9 @@
+bool request
+int8[32] firstboard
+uint16[64] boardcoords
+uint16[4] roi
+---
+bool goal
+int8[4] move
+int8[2] promote
+int8[4] capture

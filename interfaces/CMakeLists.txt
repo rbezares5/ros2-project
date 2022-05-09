@@ -28,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CameraCalibration.srv"
   "srv/ComputerVision.srv"
   "srv/CheckersPlay.srv"
+  "srv/HumanCheckersPlay.srv"
   "srv/RobotMovement.srv"
  )
 

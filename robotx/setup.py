@@ -24,7 +24,8 @@ setup(
             'calibration = robotx.calibratorNode:main',
             'vision = robotx.computerVisionNode:main',
             'agent = robotx.checkersAgentNode:main',
-            'robot = robotx.robotNode:main', 
+            'human = robotx.humanPlayerNode:main',
+            'robot = robotx.robotNode:main',
         ],
     },
 )

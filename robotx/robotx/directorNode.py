@@ -8,6 +8,7 @@ from interfaces.srv import CameraCalibration
 from interfaces.srv import ComputerVision  
 from interfaces.srv import CheckersPlay
 from interfaces.srv import RobotMovement
+from interfaces.srv import HumanCheckersPlay
 
 # define classes for the client nodes we are going to use
 class CalibrationClientAsync(Node):
@@ -51,6 +52,23 @@ class AgentClientAsync(Node):
     def send_request(self):
         self.req.request = True
         self.req.board = self.board             
+        self.future = self.cli.call_async(self.req)
+
+class HumanClientAsync(Node):
+
+    def __init__(self,name,board):
+        super().__init__(str(name))    #initilize the node with this name
+        self.cli = self.create_client(HumanCheckersPlay, 'human_checkers_play_service')     #type and name of the service  
+        while not self.cli.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = HumanCheckersPlay.Request()
+        self.board = board                             
+
+    def send_request(self, pCoords, pROI):
+        self.req.request = True
+        self.req.firstboard = self.board
+        self.req.boardcoords = pCoords
+        self.req.roi = pROI              
         self.future = self.cli.call_async(self.req)
 
 class RobotClientAsync(Node):
@@ -208,9 +226,77 @@ def main(args=None):
         input('Press <ENTER> to continue')
 
         #Assuming player 2 is human, now is the time to make a move on the board and then let the program continue
-        print('Calling player 2 (human)')
-        print('Please make your move on the board')
-        input("Press <ENTER> to continue once you're done")
+        #print('Calling player 2 (human)')
+        #print('Please make your move on the board')
+        #input("Press <ENTER> to continue once you're done")
+
+        # Now it's player 2's turn so we request the vision service after the robot has modified the board
+        # create a client node object for the computer vision service
+        print('Requesting board vision')
+        input('Press <ENTER> to continue')
+        computerVisionClient = VisionClientAsync()
+        computerVisionClient.send_request(coordsList,roi)
+        
+        # this loop checks if there is an available service with a matching name and type as the client
+        while rclpy.ok():
+            rclpy.spin_once(computerVisionClient)
+            if computerVisionClient.future.done():
+                try:
+                    response = computerVisionClient.future.result()
+                except Exception as e:
+                    computerVisionClient.get_logger().info(
+                        'Service call failed %r' % (e,))
+                else:
+                    if response.goal == True:
+                        computerVisionClient.get_logger().info(
+                            'Board state analyzed successfully'                               
+                            )
+
+                        boardState=response.board
+                        #print(boardState)
+                    break
+                break
+        computerVisionClient.destroy_node()
+
+        print('Board state acquired')
+        input('Press <ENTER> to continue')
+
+        # After acquiring the new board, we are going to request the human play service
+        # create a client node object for the human checkers play service
+        print('Requesting player 2 (human) service')
+        input('Press <ENTER> to continue')
+        humanPlayer = HumanClientAsync('player2',boardState)
+        humanPlayer.send_request(coordsList,roi)
+        
+        # this loop checks if there is an available service with a matching name and type as the client
+        while rclpy.ok():
+            rclpy.spin_once(humanPlayer)
+            if humanPlayer.future.done():
+                try:
+                    response = humanPlayer.future.result()
+                except Exception as e:
+                    humanPlayer.get_logger().info(
+                        'Service call failed %r' % (e,))
+                else:
+                    if response.goal == True:
+                        humanPlayer.get_logger().info(
+                            'Checkers play made'                               
+                            )
+
+                        #boardState=response.board
+                        move=response.move
+                        promote=response.promote
+                        capture=response.capture
+                        #print(boardState)
+                    break
+                break
+
+        humanPlayer.destroy_node()
+        print('Player 2 makes their move')
+        input('Press <ENTER> to continue')
+
+        #After this, we could call the robot service for a remote location, 
+        #but for now the human is in the same place so no need to call a remote 00robot service
 
         '''
         print('Requesting board vision')

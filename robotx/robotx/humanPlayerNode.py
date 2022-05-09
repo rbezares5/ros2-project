@@ -10,14 +10,32 @@ import copy
 from abc import ABC, abstractmethod
 
 # import custom interfaces
-from interfaces.srv import CheckersPlay
+from interfaces.srv import HumanCheckersPlay
+from interfaces.srv import ComputerVision  
 
-
-class checkersAgentNode(Node):
+# We will also need to request the vision service 
+class VisionClientAsync(Node):
 
     def __init__(self):
-        super().__init__('checkers_agent_server') #initilize the node with this name
-        self.srv = self.create_service(CheckersPlay, 'checkers_play_service', self.checkersPlayCallback) #type, name and callback of the service
+        super().__init__('computer_vision_client')    #initilize the node with this name
+        self.cli = self.create_client(ComputerVision, 'computer_vision_service')     #type and name of the service  
+        while not self.cli.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = ComputerVision.Request()                                   
+
+    def send_request(self,pCoords,pROI):
+        self.req.request = True
+        self.req.boardcoords = pCoords
+        self.req.roi = pROI                
+        self.future = self.cli.call_async(self.req)
+
+
+class humanPlayerNode(Node):
+
+    def __init__(self):
+        super().__init__('human_player_server') #initilize the node with this name
+        self.srv = self.create_service(HumanCheckersPlay, 'human_checkers_play_service', self.checkersPlayCallback) #type, name and callback of the service
+
                 
     def checkersPlayCallback(self, request, response):
         self.get_logger().info('Checkers play request acknowledged')   #receive the request
@@ -26,12 +44,11 @@ class checkersAgentNode(Node):
 
         if request.request:
             # Here we get a list representing the board state and select a play and return the modified matrix
-            boardRequest = request.board
-            print("Board state as list from the request data")
-            print(boardRequest)
+            boardRequest = request.firstboard
+            #print("Board state as list from the request data")
+            #print(boardRequest)
 
             # Convert that list into a format that can be used by the checkers program
-            ''''''
             boardList=np.zeros((8,4), dtype=int)
             k=0
             for i in range(8):
@@ -41,26 +58,112 @@ class checkersAgentNode(Node):
                     k+=1
 
             boardList=boardList.tolist()
-            print("Board state as a list using the same format as the game program")
-            print(boardList)
+            #print("Board state as a list using the same format as the game program")
+            #print(boardList)
 
             # Initialize a gamestate object and asign the values of the list we got
             myBoard=GameState()
 
-            myBoard.board.player_turn=True #set as player 1, should get this info in the request!
+            myBoard.board.player_turn=False #set player2
 
             myBoard.board.spots=boardList
             #print(myBoard.board.spots)
-            print('Received board:')
+            print('Received starting board:')
             myBoard.print_board()
 
+            '''
             # Initialize an AI agent object and generate a move
             aiPlayer = AlphaBetaAgent(depth=3)
             move=aiPlayer.get_action(myBoard)
             print(move)
+            '''
 
-            # Apply the move to the board
+            #TODO
+            # Now we have to get another board from the vision system and process it
+            # Get from the request necessary info to perform the vision service request
+            coordsList=request.boardcoords
+            roi=request.roi 
+            
+            # Put the vision request in a while loop until we find a valid move
+            isValid=False
+            while isValid==False:
+
+                # create a client node object for the computer vision service
+                print('Requesting board vision')
+                print('Please make your move on the board now')
+                input('Press <ENTER> to continue')
+                computerVisionClient = VisionClientAsync()
+                computerVisionClient.send_request(coordsList,roi)
+                
+                # this loop checks if there is an available service with a matching name and type as the client
+                while rclpy.ok():
+                    rclpy.spin_once(computerVisionClient)
+                    if computerVisionClient.future.done():
+                        try:
+                            responseVision = computerVisionClient.future.result()
+                        except Exception as e:
+                            computerVisionClient.get_logger().info(
+                                'Service call failed %r' % (e,))
+                        else:
+                            if responseVision.goal == True:
+                                computerVisionClient.get_logger().info(
+                                    'Board state analyzed successfully'                               
+                                    )
+
+                                boardRequest2=responseVision.board
+                            break
+                        break
+                computerVisionClient.destroy_node()
+
+                print('New Board state acquired')
+                #input('Press <ENTER> to continue')
+
+                # convert the new board into the format used by the game program
+                boardList2=np.zeros((8,4), dtype=int)
+                k=0
+                for i in range(8):
+                    for j in range(4):
+                        #if (i+j+1)%2==1:
+                        boardList2[np.unravel_index(k,(8,4))]=boardRequest2[np.ravel_multi_index((i,j),(8,4))]
+                        k+=1
+
+
+                boardList2=boardList2.tolist()
+
+                #Initialize a board object and asign the values of the list we just generated
+                myBoard2=GameState()
+                myBoard2.board.player_turn=False #set player2
+                myBoard2.board.spots=boardList2
+                #print("modified board")
+                myBoard2.print_board()
+
+                # Get all possible valid moves from the first board
+                legalMoves=myBoard.board.get_possible_next_moves()
+
+                # Now, apply all the possible moves to the starting board and compare against the modified board
+                for m in legalMoves:
+                    auxBoard=copy.deepcopy(myBoard)
+                    #print(m)
+                    auxBoard.board.make_move(m)
+                    #print(auxBoard.board.spots)
+                    #print(myBoard2.board.spots)
+                    if auxBoard.board.spots == myBoard2.board.spots:
+                        print('Selected move is {}' .format(m))
+                        move=m
+                        isValid=True    #if we find a valid move we can leave the while loop
+
+                if isValid==False:  #if the move is not valid, repeat the loop and notify the user
+                    print('Detected move is not valid')
+                    print('Previous board was:')
+                    myBoard.print_board()
+                    print('Please try a valid move from this board')
+
+
+
+            # Since we found a valid move, now we can apply it to the first board and get the info for the robot if necessary
             cap, prom = myBoard.board.make_move2(move, switch_player_turn=False)
+
+
             print('Play selected. Next board state:')
             myBoard.print_board()
 
@@ -92,8 +195,8 @@ class checkersAgentNode(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    checkersAgentServer = checkersAgentNode()
-    rclpy.spin(checkersAgentServer)
+    humanPlayerServer = humanPlayerNode()
+    rclpy.spin(humanPlayerServer)
 
     rclpy.shutdown()
 
