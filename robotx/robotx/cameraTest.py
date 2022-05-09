@@ -99,9 +99,9 @@ def createMaskG(frame):
     #hsv thresholds
     hMin=0.153
     hMax=0.404
-    sMin=0.159
+    sMin=0.300
     sMax=1
-    vMin=0.614
+    vMin=0.371
     vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
@@ -260,7 +260,9 @@ while True:
 
     #morphological operations to get only the pieces
     kernel = cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
-    imgR=cv.morphologyEx(maskR, cv.MORPH_CLOSE, kernel)
+
+    imgR=cv.morphologyEx(maskR, cv.MORPH_OPEN, kernel)
+    imgR=cv.morphologyEx(imgR, cv.MORPH_CLOSE, kernel)
     contoursR, hierarchyR=cv.findContours(imgR, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     #print(len(contoursR))
     cv.imshow('Red pieces', imgR)
@@ -285,8 +287,8 @@ while True:
     cv.imshow('Red centroids', frameR)
 
 
-
-    imgB=cv.morphologyEx(maskB, cv.MORPH_CLOSE, kernel)
+    imgB=cv.morphologyEx(maskB, cv.MORPH_OPEN, kernel)
+    imgB=cv.morphologyEx(imgB, cv.MORPH_CLOSE, kernel)
     contoursB, hierarchyB=cv.findContours(imgB, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     #print(len(contoursB))
     cv.imshow('Blue pieces', imgB)
@@ -332,8 +334,9 @@ while True:
         cv.putText(frameP, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         i+=1
     cv.imshow('Pink centroids', frameP)
-
-    imgG=cv.morphologyEx(maskG, cv.MORPH_CLOSE, kernel)
+    
+    imgG=cv.morphologyEx(maskG, cv.MORPH_OPEN, kernel)
+    imgG=cv.morphologyEx(imgG, cv.MORPH_CLOSE, kernel)
     contoursG, _ =cv.findContours(imgG, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     cv.imshow('Green pieces', imgG)
     frameG=copy.deepcopy(frame)
@@ -434,8 +437,8 @@ while True:
                     pos=j
             boardState[np.unravel_index(pos,(8,4))]=4 #linear index
 
-    print(boardState)
-    input('press enter to continue')
+    #print(boardState)
+    #input('press enter to continue')
 
     # Finish the program
     if cv.waitKey(1) == ord('q'):
