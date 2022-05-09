@@ -1,5 +1,6 @@
 bool request
 int8[32] board
+bool playerturn
 ---
 bool goal
 int8[4] move

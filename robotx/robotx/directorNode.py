@@ -41,32 +41,36 @@ class VisionClientAsync(Node):
 
 class AgentClientAsync(Node):
 
-    def __init__(self,name,board):
+    def __init__(self,name,pBoard,pTurn):
         super().__init__(str(name))    #initilize the node with this name
         self.cli = self.create_client(CheckersPlay, 'checkers_play_service')     #type and name of the service  
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('service not available, waiting again...')
         self.req = CheckersPlay.Request()
-        self.board = board                             
+        self.board = pBoard
+        self.turn = pTurn                            
 
     def send_request(self):
         self.req.request = True
-        self.req.board = self.board             
+        self.req.board = self.board
+        self.req.playerturn = self.turn             
         self.future = self.cli.call_async(self.req)
 
 class HumanClientAsync(Node):
 
-    def __init__(self,name,board):
+    def __init__(self,name,pBoard,pTurn):
         super().__init__(str(name))    #initilize the node with this name
         self.cli = self.create_client(HumanCheckersPlay, 'human_checkers_play_service')     #type and name of the service  
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('service not available, waiting again...')
         self.req = HumanCheckersPlay.Request()
-        self.board = board                             
+        self.board = pBoard
+        self.turn = pTurn
 
     def send_request(self, pCoords, pROI):
         self.req.request = True
         self.req.firstboard = self.board
+        self.req.playerturn = self.turn
         self.req.boardcoords = pCoords
         self.req.roi = pROI              
         self.future = self.cli.call_async(self.req)
@@ -166,7 +170,7 @@ def main(args=None):
         # create a client node object for the checkers play service
         print('Requesting player 1 service')
         input('Press <ENTER> to continue')
-        agentPlayer1 = AgentClientAsync('player1',boardState)
+        agentPlayer1 = AgentClientAsync('player1',boardState,pTurn=True)    #set this node as Player 1
         agentPlayer1.send_request()
         
         # this loop checks if there is an available service with a matching name and type as the client
@@ -265,7 +269,7 @@ def main(args=None):
         # create a client node object for the human checkers play service
         print('Requesting player 2 (human) service')
         input('Press <ENTER> to continue')
-        humanPlayer = HumanClientAsync('player2',boardState)
+        humanPlayer = HumanClientAsync('player2',boardState,pTurn=False)    #set this node as Player 2
         humanPlayer.send_request(coordsList,roi)
         
         # this loop checks if there is an available service with a matching name and type as the client

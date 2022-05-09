@@ -47,7 +47,7 @@ class checkersAgentNode(Node):
             # Initialize a gamestate object and asign the values of the list we got
             myBoard=GameState()
 
-            myBoard.board.player_turn=True #set as player 1, should get this info in the request!
+            myBoard.board.player_turn=request.playerturn    #assign the requested player turn
 
             myBoard.board.spots=boardList
             #print(myBoard.board.spots)

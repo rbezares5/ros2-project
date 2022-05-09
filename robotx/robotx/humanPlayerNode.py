@@ -64,21 +64,14 @@ class humanPlayerNode(Node):
             # Initialize a gamestate object and asign the values of the list we got
             myBoard=GameState()
 
-            myBoard.board.player_turn=False #set player2
+            myBoard.board.player_turn=request.playerturn    #assign the requested player turn
 
             myBoard.board.spots=boardList
             #print(myBoard.board.spots)
             print('Received starting board:')
             myBoard.print_board()
 
-            '''
-            # Initialize an AI agent object and generate a move
-            aiPlayer = AlphaBetaAgent(depth=3)
-            move=aiPlayer.get_action(myBoard)
-            print(move)
-            '''
 
-            #TODO
             # Now we have to get another board from the vision system and process it
             # Get from the request necessary info to perform the vision service request
             coordsList=request.boardcoords
@@ -132,7 +125,7 @@ class humanPlayerNode(Node):
 
                 #Initialize a board object and asign the values of the list we just generated
                 myBoard2=GameState()
-                myBoard2.board.player_turn=False #set player2
+                myBoard2.board.player_turn=request.playerturn    #assign the requested player turn
                 myBoard2.board.spots=boardList2
                 #print("modified board")
                 myBoard2.print_board()

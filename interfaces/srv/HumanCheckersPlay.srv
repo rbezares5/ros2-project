@@ -1,5 +1,6 @@
 bool request
 int8[32] firstboard
+bool playerturn
 uint16[64] boardcoords
 uint16[4] roi
 ---
