@@ -16,10 +16,10 @@ def createMaskR(frame):
 
     #hsv thresholds
     hMin=0.062
-    hMax=0.235
-    sMin=0.348
+    hMax=0.141
+    sMin=0.365
     sMax=1
-    vMin=0.597
+    vMin=0.541
     vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
@@ -35,10 +35,10 @@ def createMaskB(frame):
     #hsv thresholds
     hMin=0.544
     hMax=0.714
-    sMin=0.318
+    sMin=0.262
     sMax=1
-    vMin=0.356
-    vMax=0.781
+    vMin=0.262
+    vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
 
@@ -69,18 +69,18 @@ def createMaskG(frame):
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     #hsv thresholds
-    hMin=0.153
-    hMax=0.404
-    sMin=0.159
+    hMin=0.163
+    hMax=0.409
+    sMin=0.082
     sMax=1
-    vMin=0.614
+    vMin=0.498
     vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
 
     mask=cv.inRange(hsv, lower, upper)
     
-    return mask
+    return mask 
 
 # Operation functions that we can repeat for each color
 def findCentroids(mask,kernel):
@@ -138,21 +138,12 @@ class computerVisionNode(Node):
         if request.request:
             # Here we process the image and finally create a matrix representing the board state
 
-            # COMPUTER VISION CODE
-            # create camera object
-            '''
-            print('Opening camera')
-            cap = cv.VideoCapture(0)
-            if not cap.isOpened():
-                print("Cannot open camera")
-                exit()
-            '''
-            
+            # COMPUTER VISION CODE          
 
             # there's a weird glitch that I only get in the lab, but I can't detect anything using a single frame
             # it seems to work normal if I just take several pics, so I put a while loop here
-            i=0
-            while i<5:
+            j=0
+            while j<5:
                 # Capture frame-by-frame
                 #print('Acquiring image')
                 _, frame = self.cap.read()
@@ -184,60 +175,17 @@ class computerVisionNode(Node):
                 kernel = cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
 
                 # Perform the same operations for each color to get respective centroids
+                #maskR=cv.morphologyEx(maskR, cv.MORPH_OPEN, kernel)
                 centroidsR=findCentroids(maskR,kernel)
                 #print(len(centroidsR))
+                maskB=cv.morphologyEx(maskB, cv.MORPH_ERODE, kernel)
                 centroidsB=findCentroids(maskB,kernel)
                 #print(len(centroidsB))
                 centroidsP=findCentroids(maskP,kernel)
                 #print(len(centroidsP))
+                maskG=cv.morphologyEx(maskG, cv.MORPH_OPEN, kernel)
                 centroidsG=findCentroids(maskG,kernel)
                 #print(len(centroidsG))
-                '''
-                imgR = cv.morphologyEx(maskR, cv.MORPH_CLOSE, kernel)
-                contoursR, _ = cv.findContours(imgR, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
-                frameR = copy.deepcopy(frame)
-                #find centroids using moments
-                i=1
-                centroidsR=[]
-                for c in contoursR:
-                    # calculate moments for each contour
-                    M = cv.moments(c)
-
-                    # calculate x,y coordinate of center
-                    if M["m00"] != 0:
-                        cX = int(M["m10"] / M["m00"])
-                        cY = int(M["m01"] / M["m00"])
-                    else:
-                        cX, cY = 0, 0
-                    centroidsR.append([cX,cY])
-                    cv.circle(frameR, (cX, cY), 5, (255, 255, 255), -1)
-                    cv.putText(frameR, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                    i+=1
-
-                #repeat the same operations for blue pieces
-                imgB = cv.morphologyEx(maskB, cv.MORPH_CLOSE, kernel)
-                contoursB, _ = cv.findContours(imgB, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
-                frameB = copy.deepcopy(frame)
-                #find centroids using moments
-                i=1
-                centroidsB=[]
-                for c in contoursB:
-                    # calculate moments for each contour
-                    M = cv.moments(c)
-
-                    # calculate x,y coordinate of center
-                    if M["m00"] != 0:
-                        cX = int(M["m10"] / M["m00"])
-                        cY = int(M["m01"] / M["m00"])
-                    else:
-                        cX, cY = 0, 0
-                    centroidsB.append([cX,cY])
-                    cv.circle(frameB, (cX, cY), 5, (255, 255, 255), -1)
-                    cv.putText(frameB, str(i), (cX - 25, cY - 25),cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-                    i+=1
-
-                #repeat the same operations for pink pieces
-                '''
 
                 # Now we compare the coordinates of each piece with the coordinates of each square
                 # We will need an empty board and the coordinates for the playabale centroids (request data)
@@ -272,43 +220,9 @@ class computerVisionNode(Node):
                     print('green coordinates')
                     print(len(centroidsG))
                     print(centroidsG)
-                    #boardState=populateBoard(boardState,centroidsSquares,centroidsG,symbol=4)
+                    boardState=populateBoard(boardState,centroidsSquares,centroidsG,symbol=4)
 
-                i=i+1
-
-            '''
-            #red
-            centroidsR = np.asarray(centroidsR)
-            if len(centroidsR)>0:
-                for i in range(len(centroidsR)):
-                    pos=0
-                    minDist=1000
-                    for j in range(len(centroidsSquares)):
-                        p1=np.array([centroidsSquares[j,0], centroidsSquares[j,1]]) 
-                        p2=np.array([centroidsR[i,0], centroidsR[i,1]])
-                        dist=p1-p2
-                        dist=(dist[0]**2 + dist[1]**2)**(0.5) 
-                        if dist < minDist:
-                            minDist=dist
-                            pos=j
-                    boardState[np.unravel_index(pos,(8,4))]=1 #linear index
-
-            #blue
-            centroidsB = np.asarray(centroidsB)
-            if len(centroidsB)>0:
-                for i in range(len(centroidsB)):
-                    pos=0
-                    minDist=1000
-                    for j in range(len(centroidsSquares)):
-                        p1=np.array([centroidsSquares[j,0], centroidsSquares[j,1]]) 
-                        p2=np.array([centroidsB[i,0], centroidsB[i,1]])
-                        dist=p1-p2
-                        dist=(dist[0]**2 + dist[1]**2)**(0.5) 
-                        if dist < minDist:
-                            minDist=dist
-                            pos=j
-                    boardState[np.unravel_index(pos,(8,4))]=2 #linear index
-            '''
+                j=j+1
 
             # Convert the array into a list so that it can be passed
             boardState=boardState.flatten() 

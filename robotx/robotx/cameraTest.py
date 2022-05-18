@@ -1,35 +1,17 @@
 import numpy as np
 import cv2 as cv
 import copy
-'''
-def createMaskR(frame):
-    # HSV filter
-    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
-    #hsv thresholds
-    hMin=0
-    hMax=0.195
-    sMin=0.410
-    sMax=1
-    vMin=0.646
-    vMax=1
-    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
-    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
-
-    mask=cv.inRange(hsv, lower, upper)
-    
-    return mask
-'''
 def createMaskR(frame):
     # HSV filter
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     #hsv thresholds
     hMin=0.062
-    hMax=0.147
+    hMax=0.141
     sMin=0.365
     sMax=1
-    vMin=0.837
+    vMin=0.541
     vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
@@ -37,25 +19,7 @@ def createMaskR(frame):
     mask=cv.inRange(hsv, lower, upper)
     
     return mask
-'''    
-def createMaskB(frame):
-    # HSV filter
-    hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
-    #hsv thresholds
-    hMin=0.484
-    hMax=0.702
-    sMin=0.451
-    sMax=1
-    vMin=0.421
-    vMax=0.846
-    lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
-    upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
-
-    mask=cv.inRange(hsv, lower, upper)
-    
-    return mask
-'''
 def createMaskB(frame):
     # HSV filter
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -63,10 +27,10 @@ def createMaskB(frame):
     #hsv thresholds
     hMin=0.544
     hMax=0.714
-    sMin=0.318
+    sMin=0.262
     sMax=1
-    vMin=0.356
-    vMax=0.781
+    vMin=0.262
+    vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
 
@@ -97,11 +61,11 @@ def createMaskG(frame):
     hsv= cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     #hsv thresholds
-    hMin=0.153
-    hMax=0.404
-    sMin=0.300
+    hMin=0.163
+    hMax=0.409
+    sMin=0.082
     sMax=1
-    vMin=0.371
+    vMin=0.498
     vMax=1
     lower=np.array([180*hMin, 255*sMin, 255*vMin], np.uint8)
     upper=np.array([180*hMax, 255*sMax, 255*vMax], np.uint8)
@@ -261,8 +225,8 @@ while True:
     #morphological operations to get only the pieces
     kernel = cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
 
-    imgR=cv.morphologyEx(maskR, cv.MORPH_OPEN, kernel)
-    imgR=cv.morphologyEx(imgR, cv.MORPH_CLOSE, kernel)
+    #imgR=cv.morphologyEx(maskR, cv.MORPH_OPEN, kernel)
+    imgR=cv.morphologyEx(maskR, cv.MORPH_CLOSE, kernel)
     contoursR, hierarchyR=cv.findContours(imgR, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     #print(len(contoursR))
     cv.imshow('Red pieces', imgR)
@@ -287,7 +251,7 @@ while True:
     cv.imshow('Red centroids', frameR)
 
 
-    imgB=cv.morphologyEx(maskB, cv.MORPH_OPEN, kernel)
+    imgB=cv.morphologyEx(maskB, cv.MORPH_ERODE, kernel)
     imgB=cv.morphologyEx(imgB, cv.MORPH_CLOSE, kernel)
     contoursB, hierarchyB=cv.findContours(imgB, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     #print(len(contoursB))
@@ -335,7 +299,7 @@ while True:
         i+=1
     cv.imshow('Pink centroids', frameP)
     
-    imgG=cv.morphologyEx(maskG, cv.MORPH_OPEN, kernel)
+    imgG=cv.morphologyEx(maskG, cv.MORPH_ERODE, kernel)
     imgG=cv.morphologyEx(imgG, cv.MORPH_CLOSE, kernel)
     contoursG, _ =cv.findContours(imgG, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
     cv.imshow('Green pieces', imgG)
