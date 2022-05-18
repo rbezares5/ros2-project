@@ -8,6 +8,7 @@ import copy
 from functools import reduce
 import copy
 from abc import ABC, abstractmethod
+import time
 
 # import custom interfaces
 from interfaces.srv import HumanCheckersPlay
@@ -84,7 +85,8 @@ class humanPlayerNode(Node):
                 # create a client node object for the computer vision service
                 print('Requesting board vision')
                 print('Please make your move on the board now')
-                input('Press <ENTER> to continue')
+                #input('Press <ENTER> to continue')
+                time.sleep(5)
                 computerVisionClient = VisionClientAsync()
                 computerVisionClient.send_request(coordsList,roi)
                 
